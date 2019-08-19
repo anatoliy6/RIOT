@@ -8,11 +8,12 @@
 
 /**
  * @ingroup     drivers_bq27441
- * @brief       Default parameters for the BQ27441 fuel gauge for single-cell Li-Ion batteries
+ * @brief       Default parameters for the BQ27441 fuel gauge for single-cell
+ *              Li-Ion batteries
  * @{
  *
  * @file
- * @brief       Default parameters for the BQ27441 fuel gauge
+ * @brief       Static command and flag definitions for the BQ27441 fuel gauge
  *
  * @author      Anatoliy Atanasov <anatoliy@6lowpan.io>
  * @author      Iliyan Stoyanov <iliyan@6lowpan.io>
@@ -36,9 +37,9 @@ extern "C" {
 
 /**
  * @brief   Standard Commands
- * @details The fuel gauge uses a series of 2-byte standard commands to enable system
- *          reading and writing of battery information. Each command has an associated
- *          sequential command-code pair.
+ * @details The fuel gauge uses a series of 2-byte standard commands to enable
+ *          system reading and writing of battery information. Each command has
+ *          an associated sequential command-code pair.
  * @{
  */
 #define BQ27441_COMMAND_CONTROL         0x00    /**< Control */
@@ -65,11 +66,11 @@ extern "C" {
 
 /**
  * @brief   Control Sub-commands
- * @details Issuing a Control command requires a subsequent 2-byte subcommand. These
- *          additional bytes specify the particular control function desired. The
- *          Control command allows the system to control specific features of the fuel
- *          gauge during normal operation and additional features when the device is in
- *          different access modes.
+ * @details Issuing a Control command requires a subsequent 2-byte subcommand.
+ *          These additional bytes specify the particular control function
+ *          desired. The Control command allows the system to control specific
+ *          features of the fuel gauge during normal operation and additional
+ *          features when the device is in different access modes.
  * @{
  */
 #define BQ27441_CONTROL_STATUS          0x00
@@ -96,10 +97,11 @@ extern "C" {
 /**
  * @brief   Control Status Word - Bit Definitions
  * @details Bit positions for the 16-bit data of CONTROL_STATUS.
- *          CONTROL_STATUS instructs the fuel gauge to return status information to
- *          Control addresses 0x00 and 0x01. The read-only status word contains status
- *          bits that are set or cleared either automatically as conditions warrant or
- *          through using specified subcommands.
+ *          CONTROL_STATUS instructs the fuel gauge to return status
+ *          information to Control addresses 0x00 and 0x01. The read-only
+ *          status word contains status bits that are set or cleared either
+ *          automatically as conditions warrant or through using specified
+ *          subcommands.
  * @{
  */
 #define BQ27441_STATUS_SHUTDOWNEN   (1 << 15)
@@ -121,8 +123,8 @@ extern "C" {
 /**
  * @brief   Flag Command - Bit Definitions
  * @details Bit positions for the 16-bit data of Flags
- *          This read-word function returns the contents of the fuel gauging status
- *          register, depicting the current operating status.
+ *          This read-word function returns the contents of the fuel gauging
+ *          status register, depicting the current operating status.
  * @{
  */
 #define BQ27441_FLAG_OT         (1 << 15)
@@ -140,9 +142,10 @@ extern "C" {
 
 /**
  * @brief   Extended Data Commands
- * @details Extended data commands offer additional functionality beyond the standard
- *          set of commands. They are used in the same manner; however, unlike standard
- *          commands, extended commands are not limited to 2-byte words.
+ * @details Extended data commands offer additional functionality beyond the
+ *          standard set of commands. They are used in the same manner; however,
+ *          unlike standard commands, extended commands are not limited to
+ *          2-byte words.
  * @{
  */
 #define BQ27441_EXTENDED_OPCONFIG   0x3A    /**< OpConfig */
@@ -156,18 +159,20 @@ extern "C" {
 
 /**
  * @brief   Configuration Class, Subclass ID's
- * @details To access a subclass of the extended data, set the DataClass() function
- *          with one of these values.
+ * @details To access a subclass of the extended data, set the DataClass()
+ *          function with one of these values.
  * @{
  */
 #define BQ27441_ID_SAFETY           2   /**< Configuration Class: Safety */
-#define BQ27441_ID_CHG_TERMINATION  36  /**< Configuration Class: Charge Termination */
+#define BQ27441_ID_CHG_TERMINATION  36  /**< Configuration Class: Charge
+                                             Termination */
 #define BQ27441_ID_CONFIG_DATA      48  /**< Configuration Class: Data */
 #define BQ27441_ID_DISCHARGE        49  /**< Configuration Class: Discharge */
 #define BQ27441_ID_REGISTERS        64  /**< Configuration Class: Registers */
 #define BQ27441_ID_POWER            68  /**< Configuration Class: Power */
 #define BQ27441_ID_IT_CFG           80  /**< Gas Gauging Class: IT Cfg */
-#define BQ27441_ID_CURRENT_THRESH   81  /**< Gas Gauging Class: Current Thresholds */
+#define BQ27441_ID_CURRENT_THRESH   81  /**< Gas Gauging Class: Current
+                                             Thresholds */
 #define BQ27441_ID_STATE            82  /**< Gas Gauging Class: State */
 #define BQ27441_ID_R_A_RAM          89  /**< Ra Tables Class: R_a RAM */
 #define BQ27441_ID_CALIB_DATA       104 /**< Calibration Class: Data */

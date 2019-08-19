@@ -8,7 +8,8 @@
 
 /**
  * @ingroup     drivers_bq27441
- * @brief       Default parameters for the BQ27441 fuel gauge for single-cell Li-Ion batteries
+ * @brief       Default parameters for the BQ27441 fuel gauge for single-cell
+ *              Li-Ion batteries
  * @{
  *
  * @file
@@ -52,11 +53,7 @@ extern "C" {
  * @brief   Allocation of BQ27441 configuration
  */
 static const bq27441_param_t params_default[] = {
-    #ifdef BQ27441_PARAMS_BOARD
-    BQ27441_PARAMS_BOARD
-    #else
     BQ27441_PARAMS
-    #endif
 };
 
 #ifdef __cplusplus

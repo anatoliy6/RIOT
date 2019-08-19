@@ -19,24 +19,24 @@
  * @}
  */
 
-#include "bq27441.h"
-#include "bq27441-internal.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <assert.h>
-#define ENABLE_DEBUG        (1)
-#include "debug.h"
-
-#ifndef I2C_ACK
-#define I2C_ACK         (0)
-#endif
-
 #include "periph/gpio.h"
 #include "xtimer.h"
+#include "debug.h"
+#include "bq27441.h"
+#include "bq27441-internal.h"
 
-#define BQ72441_I2C_TIMEOUT 2000
+#define BQ72441_I2C_TIMEOUT (2000U)
 #define BQ72441_I2C_BUFSIZE (128U)
+
+#ifndef I2C_ACK
+#define I2C_ACK             (0)
+#endif
+
+#define ENABLE_DEBUG        (0)
 
 uint8_t _constrain(uint8_t amt, uint8_t low, uint8_t high)
 {
@@ -105,12 +105,10 @@ bool bq27441_init(bq27441_t *dev, const bq27441_param_t *param)
 
 bool bq27441_set_capacity(bq27441_t *dev, uint16_t capacity)
 {
-    // Write to STATE subclass (82) of BQ27441 extended memory.
-    // Offset 0x0A (10)
-    // Design capacity is a 2-byte piece of data - MSB first
-    uint8_t capMSB = capacity >> 8;
-    uint8_t capLSB = capacity & 0x00FF;
-    uint8_t capacityData[2] = { capMSB, capLSB };
+    /* Write to STATE subclass (82) of BQ27441 extended memory.
+       Offset 0x0A (10)
+       Design capacity is a 2-byte piece of data - MSB first */
+    uint8_t capacityData[2] = { capacity >> 8, capacity & 0x00FF };
 
     return _bq27441_write_extended_data(dev, BQ27441_ID_STATE, 10, capacityData, 2);
 }
@@ -120,7 +118,7 @@ uint16_t bq27441_get_voltage(const bq27441_t *dev)
     return _bq27441_read_word(dev, BQ27441_COMMAND_VOLTAGE);
 }
 
-int16_t bq27441_get_current(const bq27441_t *dev, current_measure type)
+int16_t bq27441_get_current(const bq27441_t *dev, current_measure_t type)
 {
     int16_t current = 0;
 
@@ -139,7 +137,7 @@ int16_t bq27441_get_current(const bq27441_t *dev, current_measure type)
     return current;
 }
 
-uint16_t bq27441_get_capacity(const bq27441_t *dev, capacity_measure type)
+uint16_t bq27441_get_capacity(const bq27441_t *dev, capacity_measure_t type)
 {
     uint16_t capacity = 0;
 
@@ -180,7 +178,7 @@ int16_t bq27441_get_power(const bq27441_t *dev)
     return (int16_t)_bq27441_read_word(dev, BQ27441_COMMAND_AVG_POWER);
 }
 
-uint16_t bq27441_get_soc(const bq27441_t *dev, soc_measure type)
+uint16_t bq27441_get_soc(const bq27441_t *dev, soc_measure_t type)
 {
     uint16_t socRet = 0;
 
@@ -196,7 +194,7 @@ uint16_t bq27441_get_soc(const bq27441_t *dev, soc_measure type)
     return socRet;
 }
 
-uint8_t bq27441_get_soh(const bq27441_t *dev, soh_measure type)
+uint8_t bq27441_get_soh(const bq27441_t *dev, soh_measure_t type)
 {
     uint16_t sohRaw = _bq27441_read_word(dev, BQ27441_COMMAND_SOH);
     uint8_t sohStatus = sohRaw >> 8;
@@ -210,7 +208,7 @@ uint8_t bq27441_get_soh(const bq27441_t *dev, soh_measure type)
     }
 }
 
-uint16_t bq27441_get_temperature(const bq27441_t *dev, temp_measure type)
+uint16_t bq27441_get_temperature(const bq27441_t *dev, temp_measure_t type)
 {
     uint16_t temp = 0;
 
@@ -236,7 +234,7 @@ bool bq27441_set_gpout_polarity(bq27441_t *dev, bool activeHigh)
 {
     uint16_t oldOpConfig = _bq27441_get_opConfig(dev);
 
-    // Check to see if we need to update opConfig:
+    /* Check to see if we need to update opConfig: */
     if ((activeHigh && (oldOpConfig & BQ27441_OPCONFIG_GPIOPOL)) ||
         (!activeHigh && !(oldOpConfig & BQ27441_OPCONFIG_GPIOPOL))) {
         return true;
@@ -260,17 +258,17 @@ bool bq27441_get_gpout_function(const bq27441_t *dev)
     return (opConfigRegister & BQ27441_OPCONFIG_BATLOWEN);
 }
 
-bool bq27441_set_gpout_function(bq27441_t *dev, gpout_function function)
+bool bq27441_set_gpout_function(bq27441_t *dev, gpout_function_t function)
 {
     uint16_t oldOpConfig = _bq27441_get_opConfig(dev);
 
-    // Check to see if we need to update opConfig:
+    /* Check to see if we need to update opConfig: */
     if ((function && (oldOpConfig & BQ27441_OPCONFIG_BATLOWEN)) ||
         (!function && !(oldOpConfig & BQ27441_OPCONFIG_BATLOWEN))) {
         return true;
     }
 
-    // Modify BATLOWN_EN bit of opConfig:
+    /* Modify BATLOWN_EN bit of opConfig: */
     uint16_t newOpConfig = oldOpConfig;
     if (function) {
         newOpConfig |= BQ27441_OPCONFIG_BATLOWEN;
@@ -279,7 +277,7 @@ bool bq27441_set_gpout_function(bq27441_t *dev, gpout_function function)
         newOpConfig &= ~(BQ27441_OPCONFIG_BATLOWEN);
     }
 
-    // Write new opConfig
+    /* Write new opConfig */
     return _bq27441_write_op_config(dev, newOpConfig);
 }
 
@@ -366,7 +364,7 @@ bool bq27441_enter_config_mode(bq27441_t *dev, bool userControl)
 
     if (_bq27441_sealed(dev)) {
         dev->sealFlag = true;
-        _bq27441_unseal(dev); // Must be unsealed before making changes
+        _bq27441_unseal(dev); /* Must be unsealed before making changes */
     }
 
     if (_bq27441_execute_control_word(dev, BQ27441_CONTROL_SET_CFGUPDATE)) {
@@ -385,13 +383,13 @@ bool bq27441_enter_config_mode(bq27441_t *dev, bool userControl)
 
 bool bq27441_exit_config_mode(const bq27441_t *dev, bool resim)
 {
-    // There are two methods for exiting config mode:
-    //    1. Execute the EXIT_CFGUPDATE command
-    //    2. Execute the SOFT_RESET command
-    // EXIT_CFGUPDATE exits config mode _without_ an OCV (open-circuit voltage)
-    // measurement, and without resimulating to update unfiltered-SoC and SoC.
-    // If a new OCV measurement or resimulation is desired, SOFT_RESET or
-    // EXIT_RESIM should be used to exit config mode.
+    /* There are two methods for exiting config mode:
+          1. Execute the EXIT_CFGUPDATE command
+          2. Execute the SOFT_RESET command
+       EXIT_CFGUPDATE exits config mode _without_ an OCV (open-circuit voltage)
+       measurement, and without resimulating to update unfiltered-SoC and SoC.
+       If a new OCV measurement or resimulation is desired, SOFT_RESET or
+       EXIT_RESIM should be used to exit config mode. */
     if (resim) {
         if (_bq27441_soft_reset(dev)) {
             int16_t timeout = BQ72441_I2C_TIMEOUT;
@@ -400,7 +398,7 @@ bool bq27441_exit_config_mode(const bq27441_t *dev, bool resim)
             }
             if (timeout > 0) {
                 if (dev->sealFlag) {
-                    _bq27441_seal(dev);                // Seal back up if we IC was sealed coming in
+                    _bq27441_seal(dev); /* Seal back up if we IC was sealed coming in */
                 }
                 return true;
             }
@@ -436,8 +434,8 @@ bool _bq27441_seal(const bq27441_t *dev)
 
 bool _bq27441_unseal(const bq27441_t *dev)
 {
-    // To unseal the BQ27441, write the key to the control
-    // command. Then immediately write the same key to control again.
+    /* To unseal the BQ27441, write the key to the control
+       command. Then immediately write the same key to control again. */
     if (_bq27441_read_control_word(dev, BQ27441_UNSEAL_KEY)) {
         return _bq27441_read_control_word(dev, BQ27441_UNSEAL_KEY);
     }
@@ -451,11 +449,9 @@ uint16_t _bq27441_get_opConfig(const bq27441_t *dev)
 
 bool _bq27441_write_op_config(bq27441_t *dev, uint16_t value)
 {
-    uint8_t opConfigMSB = value >> 8;
-    uint8_t opConfigLSB = value & 0x00FF;
-    uint8_t opConfigData[2] = { opConfigMSB, opConfigLSB };
+    uint8_t opConfigData[2] = { value >> 8, value & 0x00FF };
 
-    // OpConfig register location: BQ27441_ID_REGISTERS id, offset 0
+    /* OpConfig register location: BQ27441_ID_REGISTERS id, offset 0 */
     return _bq27441_write_extended_data(dev, BQ27441_ID_REGISTERS, 0, opConfigData, 2);
 }
 
@@ -474,9 +470,7 @@ uint16_t _bq27441_read_word(const bq27441_t *dev, uint16_t subAddress)
 
 uint16_t _bq27441_read_control_word(const bq27441_t *dev, uint16_t function)
 {
-    uint8_t subCommandMSB = (function >> 8);
-    uint8_t subCommandLSB = (function & 0x00FF);
-    uint8_t command[2] = { subCommandLSB, subCommandMSB };
+    uint8_t command[2] = { function & 0x00FF, function >> 8 };
     uint8_t data[2] = { 0, 0 };
 
     _bq27441_write_bytes_i2c(dev, (uint8_t)0, command, 2);
@@ -490,11 +484,9 @@ uint16_t _bq27441_read_control_word(const bq27441_t *dev, uint16_t function)
 
 bool _bq27441_execute_control_word(const bq27441_t *dev, uint16_t function)
 {
-    uint8_t subCommandMSB = (function >> 8);
-    uint8_t subCommandLSB = (function & 0x00FF);
-    uint8_t command[2] = { subCommandLSB, subCommandMSB };
+    uint8_t command[2] = { function & 0x00FF, function >> 8 };
 
-    //uint8_t data[2] = {0, 0};
+    /* uint8_t data[2] = {0, 0}; */
 
     if (_bq27441_write_bytes_i2c(dev, (uint8_t)0, command, 2)) {
         return true;
@@ -564,7 +556,8 @@ bool _bq27441_write_block_checksum(const bq27441_t *dev, uint8_t csum)
     return _bq27441_write_bytes_i2c(dev, BQ27441_EXTENDED_CHECKSUM, &csum, 1);
 }
 
-uint8_t _bq27441_read_extended_data(bq27441_t *dev, uint8_t classID, uint8_t offset)
+uint8_t _bq27441_read_extended_data(bq27441_t *dev, uint8_t classID, uint8_t
+                                    offset)
 {
     uint8_t retData = 0;
 
@@ -572,20 +565,25 @@ uint8_t _bq27441_read_extended_data(bq27441_t *dev, uint8_t classID, uint8_t off
         bq27441_enter_config_mode(dev, false);
     }
 
-    if (!_bq27441_block_data_control(dev)) { // // enable block data memory control
-        return false; // Return false if enable fails
+    if (!_bq27441_block_data_control(dev)) { /* Enable block data memory
+                                                control */
+        return false; /* Return false if enable fails */
     }
-    if (!_bq27441_block_data_class(dev, classID)) { // Write class ID using DataBlockClass()
+    if (!_bq27441_block_data_class(dev, classID)) { /* Write class ID using
+                                                       DataBlockClass() */
         return false;
     }
 
-    _bq27441_block_data_offset(dev, offset / 32);   // Write 32-bit block offset (usually 0)
+    _bq27441_block_data_offset(dev, offset / 32); /* Write 32-bit block offset
+                                                     (usually 0) */
 
-    _bq27441_compute_block_checksum(dev);           // Compute checksum going in
-    //uint8_t oldCsum = blockDataChecksum();
-    /*for (int i=0; i<32; i++)
-        Serial.print(String(readBlockData(i)) + " ");*/
-    retData = _bq27441_read_block_data(dev, offset % 32); // Read from offset (limit to 0-31)
+    _bq27441_compute_block_checksum(dev); /* Compute checksum going in */
+    /*
+    uint8_t oldCsum = blockDataChecksum();
+    for (int i=0; i<32; i++)
+        Serial.print(String(readBlockData(i)) + " ");
+    */
+    retData = _bq27441_read_block_data(dev, offset % 32); /* Read from offset (limit to 0-31) */
 
     if (!dev->userConfigControl) {
         bq27441_exit_config_mode(dev, true);
@@ -594,7 +592,8 @@ uint8_t _bq27441_read_extended_data(bq27441_t *dev, uint8_t classID, uint8_t off
     return retData;
 }
 
-bool _bq27441_write_extended_data(bq27441_t *dev, uint8_t classID, uint8_t offset, uint8_t *data, uint8_t len)
+bool _bq27441_write_extended_data(bq27441_t *dev, uint8_t classID, uint8_t
+                                  offset, uint8_t *data, uint8_t len)
 {
     if (len > 32) {
         return false;
@@ -604,26 +603,32 @@ bool _bq27441_write_extended_data(bq27441_t *dev, uint8_t classID, uint8_t offse
         bq27441_enter_config_mode(dev, false);
     }
 
-    if (!_bq27441_block_data_control(dev)) { // // enable block data memory control
-        return false; // Return false if enable fails
+    if (!_bq27441_block_data_control(dev)) { /* Enable block data memory
+                                                control */
+        return false; /* Return false if enable fails */
     }
-    if (!_bq27441_block_data_class(dev, classID)) { // Write class ID using DataBlockClass()
+    if (!_bq27441_block_data_class(dev, classID)) { /* Write class ID using
+                                                       DataBlockClass() */
         return false;
     }
 
-    _bq27441_block_data_offset(dev, offset / 32);   // Write 32-bit block offset (usually 0)
-    _bq27441_compute_block_checksum(dev);           // Compute checksum going in
-    //uint8_t oldCsum = blockDataChecksum();
+    _bq27441_block_data_offset(dev, offset / 32);   /* Write 32-bit block
+                                                       offset (usually 0) */
+    _bq27441_compute_block_checksum(dev); /* Compute checksum going in */
+    /*
+    uint8_t oldCsum = blockDataChecksum();
+    */
 
-    // Write data bytes:
+    /* Write data bytes: */
     for (int i = 0; i < len; i++) {
-        // Write to offset, mod 32 if offset is greater than 32
-        // The blockDataOffset above sets the 32-bit block
+        /* Write to offset, mod 32 if offset is greater than 32
+           The blockDataOffset above sets the 32-bit block */
         _bq27441_write_block_data(dev, (offset % 32) + i, data[i]);
     }
 
-    // Write new checksum using BlockDataChecksum (0x60)
-    uint8_t newCsum = _bq27441_compute_block_checksum(dev); // Compute the new checksum
+    /* Write new checksum using BlockDataChecksum (0x60) */
+    uint8_t newCsum = _bq27441_compute_block_checksum(dev); /* Compute the new
+                                                               checksum */
     _bq27441_write_block_checksum(dev, newCsum);
 
     if (!dev->userConfigControl) {
@@ -633,7 +638,8 @@ bool _bq27441_write_extended_data(bq27441_t *dev, uint8_t classID, uint8_t offse
     return true;
 }
 
-int16_t _bq27441_read_bytes_i2c(const bq27441_t *dev, uint8_t subAddress, uint8_t *dest, uint8_t count)
+int16_t _bq27441_read_bytes_i2c(const bq27441_t *dev, uint8_t subAddress,
+                                uint8_t *dest, uint8_t count)
 {
     int16_t timeout = BQ72441_I2C_TIMEOUT;
     uint8_t i2c_buf[BQ72441_I2C_BUFSIZE];
@@ -653,7 +659,8 @@ int16_t _bq27441_read_bytes_i2c(const bq27441_t *dev, uint8_t subAddress, uint8_
     return timeout;
 }
 
-uint16_t _bq27441_write_bytes_i2c(const bq27441_t *dev, uint8_t subAddress, uint8_t *src, uint8_t count)
+uint16_t _bq27441_write_bytes_i2c(const bq27441_t *dev, uint8_t subAddress,
+                                  uint8_t *src, uint8_t count)
 {
     int res;
     uint8_t i2c_buf[BQ72441_I2C_BUFSIZE];
