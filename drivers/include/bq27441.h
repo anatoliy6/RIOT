@@ -427,6 +427,13 @@ bool bq27441_enter_config_mode(bq27441_t *dev, bool userControl);
 /**
  * @brief       Exit configuration mode with the option to perform a
  *              resimulation
+ *              There are two methods for exiting config mode:
+ *                  1. Execute the EXIT_CFGUPDATE command
+ *                  2. Execute the SOFT_RESET command
+ *              EXIT_CFGUPDATE exits config mode _without_ an OCV (open-circuit voltage)
+ *              measurement, and without resimulating to update unfiltered-SoC and SoC.
+ *              If a new OCV measurement or resimulation is desired, SOFT_RESET or
+ *              EXIT_RESIM should be used to exit config mode.
  *
  * @param[in]   *dev    pointer to bq27441_t struct containing the i2c device
  *                      and the address

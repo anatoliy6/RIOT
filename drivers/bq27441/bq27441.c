@@ -383,13 +383,6 @@ bool bq27441_enter_config_mode(bq27441_t *dev, bool userControl)
 
 bool bq27441_exit_config_mode(const bq27441_t *dev, bool resim)
 {
-    /* There are two methods for exiting config mode:
-          1. Execute the EXIT_CFGUPDATE command
-          2. Execute the SOFT_RESET command
-       EXIT_CFGUPDATE exits config mode _without_ an OCV (open-circuit voltage)
-       measurement, and without resimulating to update unfiltered-SoC and SoC.
-       If a new OCV measurement or resimulation is desired, SOFT_RESET or
-       EXIT_RESIM should be used to exit config mode. */
     if (resim) {
         if (_bq27441_soft_reset(dev)) {
             int16_t timeout = BQ72441_I2C_TIMEOUT;
